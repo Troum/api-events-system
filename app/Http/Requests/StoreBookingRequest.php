@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\PaymentGateway;
+use App\Enums\PaymentGatewayEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,14 +31,14 @@ class StoreBookingRequest extends FormRequest
             'seats' => 'required|integer|min:1',
             'payment_gateway' => [
                 'nullable',
-                Rule::enum(PaymentGateway::class),
+                Rule::enum(PaymentGatewayEnum::class),
                 function ($attribute, $value, $fail) {
                     if (!$value) {
                         return;
                     }
 
                     $trip = \App\Models\Trip::find($this->trip_id);
-                    
+
                     if (!$trip) {
                         return;
                     }

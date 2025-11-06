@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum PaymentGateway: string
+enum PaymentGatewayEnum: string
 {
     case YOOKASSA = 'yookassa';
     case STRIPE = 'stripe';

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\PaymentGateway;
+use App\Enums\PaymentGatewayEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,7 +27,7 @@ class Booking extends Model
 
     protected $casts = [
         'payment_status' => 'string',
-        'payment_gateway' => PaymentGateway::class,
+        'payment_gateway' => PaymentGatewayEnum::class,
         'cancelled_at' => 'datetime',
         'refund_requested_at' => 'datetime',
         'refunded_at' => 'datetime',
@@ -47,8 +47,8 @@ class Booking extends Model
      */
     public function canRequestRefund(): bool
     {
-        return $this->payment_gateway?->value !== 'pay_on_arrival' 
-            && $this->payment_status === 'paid' 
+        return $this->payment_gateway?->value !== 'pay_on_arrival'
+            && $this->payment_status === 'paid'
             && !in_array($this->status, ['refund_requested', 'refunded', 'cancelled']);
     }
 

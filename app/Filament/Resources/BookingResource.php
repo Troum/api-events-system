@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\PaymentGateway;
+use App\Enums\PaymentGatewayEnum;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Filament\Resources\BookingResource\RelationManagers;
 use App\Models\Booking;
@@ -64,8 +64,8 @@ class BookingResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('payment_gateway')
                             ->label('Способ оплаты')
-                            ->options(PaymentGateway::options())
-                            ->default(PaymentGateway::PAY_ON_ARRIVAL->value)
+                            ->options(PaymentGatewayEnum::options())
+                            ->default(PaymentGatewayEnum::PAY_ON_ARRIVAL->value)
                             ->required()
                             ->native(false)
                             ->helperText('Выберите способ оплаты для этого бронирования'),
@@ -123,11 +123,11 @@ class BookingResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn($state) => $state?->label())
                     ->color(fn($state) => match ($state) {
-                        PaymentGateway::PAY_ON_ARRIVAL => 'gray',
-                        PaymentGateway::YOOKASSA => 'info',
-                        PaymentGateway::STRIPE => 'purple',
-                        PaymentGateway::PAYPAL => 'blue',
-                        PaymentGateway::WEBPAY => 'indigo',
+                        PaymentGatewayEnum::PAY_ON_ARRIVAL => 'gray',
+                        PaymentGatewayEnum::YOOKASSA => 'info',
+                        PaymentGatewayEnum::STRIPE => 'purple',
+                        PaymentGatewayEnum::PAYPAL => 'blue',
+                        PaymentGatewayEnum::WEBPAY => 'indigo',
                         default => 'gray',
                     }),
 
@@ -168,7 +168,7 @@ class BookingResource extends Resource
 
                 Tables\Filters\SelectFilter::make('payment_gateway')
                     ->label('Способ оплаты')
-                    ->options(PaymentGateway::options()),
+                    ->options(PaymentGatewayEnum::options()),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
