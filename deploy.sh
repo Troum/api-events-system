@@ -14,6 +14,20 @@ git pull origin main
 echo "📦 Установка зависимостей..."
 composer install --optimize-autoloader --no-dev
 
+echo "🎨 Сборка frontend assets..."
+# Проверяем наличие папки build
+if [ ! -d "public/build" ] || [ -z "$(ls -A public/build)" ]; then
+    echo "📦 Папка public/build отсутствует или пуста, выполняем сборку..."
+    if command -v npm &> /dev/null; then
+        npm install --production=false
+        npm run build
+    else
+        echo "⚠️ ВНИМАНИЕ: npm не установлен. Пожалуйста, скопируйте папку public/build вручную!"
+    fi
+else
+    echo "✓ Assets уже собраны"
+fi
+
 echo "🧹 Очистка кешей..."
 php artisan config:clear
 php artisan route:clear
