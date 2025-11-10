@@ -47,8 +47,18 @@ task('build:assets', function () {
     
     if (test('command -v npm')) {
         info('Building assets with npm...');
-        run('cd {{release_path}} && npm install --production=false');
-        run('cd {{release_path}} && npm run build');
+        
+        // Проверяем наличие nvm и переключаемся на Node 20
+        if (test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
+            info('Setting up Node.js 20 via nvm...');
+            run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm install --production=false');
+            run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm run build');
+        } else {
+            // Fallback если nvm не установлен
+            run('cd {{release_path}} && npm install --production=false');
+            run('cd {{release_path}} && npm run build');
+        }
+        
         info('✓ Assets built successfully');
     } else {
         warning('⚠ npm not found. Please build assets locally and commit them.');
@@ -77,6 +87,34 @@ desc('Restart Nginx');
 task('nginx:restart', function () {
     run('sudo systemctl restart nginx');
 })->once();
+
+desc('Setup Node.js 20 via nvm');
+task('node:setup', function () {
+    if (!test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
+        warning('⚠ nvm is not installed on the server');
+        info('To install nvm, run:');
+        info('curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash');
+        return;
+    }
+    
+    info('Checking Node.js 20...');
+    
+    // Проверяем установлен ли Node 20
+    $result = run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm ls 20 2>&1 || echo "not_found"', ['no_throw' => true]);
+    
+    if (strpos($result, 'not_found') !== false || strpos($result, 'N/A') !== false) {
+        info('Installing Node.js 20...');
+        run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm install 20');
+        run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm alias default 20');
+        info('✅ Node.js 20 installed successfully');
+    } else {
+        info('✅ Node.js 20 is already installed');
+    }
+    
+    // Показываем версию
+    $version = run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && node --version');
+    info("Current Node.js version: {$version}");
+});
 
 desc('Setup production .env file');
 task('env:setup', function () {
@@ -163,6 +201,7 @@ task('deploy', [
     'deploy:vendors',
     'build:assets',
     'artisan:storage:link',
+    'cache:clear-all',  // Очищаем кеш ПЕРЕД миграциями
     'artisan:migrate',
     'artisan:view:cache',
     'artisan:config:cache',
