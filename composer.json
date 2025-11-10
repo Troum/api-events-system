@@ -23,6 +23,7 @@
         "mallardduck/blade-lucide-icons": "^1.23"
     },
     "require-dev": {
+        "deployer/deployer": "^7.5",
         "fakerphp/faker": "^1.23",
         "laravel-lang/common": "^6.7",
         "laravel/boost": "^1.6",

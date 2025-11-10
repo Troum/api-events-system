@@ -1,14 +1,14 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "/Users/ruslanbelchenkov/Library/Application Support/Herd/bin/php84",
+            "command": "/Users/ruslanbelchenkov/Library/Application Support/Herd/bin/php83",
             "args": [
                 "/Users/ruslanbelchenkov/Backend/api.camp/artisan",
                 "boost:mcp"
             ]
         },
         "herd": {
-            "command": "/Users/ruslanbelchenkov/Library/Application Support/Herd/bin/php84",
+            "command": "/Users/ruslanbelchenkov/Library/Application Support/Herd/bin/php83",
             "args": [
                 "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
             ],
