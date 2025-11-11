@@ -206,7 +206,7 @@ task('deploy', [
     'artisan:migrate',
     'artisan:view:cache',
     'artisan:config:cache',
-    'artisan:route:cache',
+    // 'artisan:route:cache', // Отключено из-за конфликта с Livewire/Filament
     'artisan:optimize',
     'filament:optimize',
     'deploy:publish',
