@@ -23,6 +23,9 @@ class EventResource extends Resource
     protected static ?string $modelLabel = 'Мероприятие';
     
     protected static ?string $pluralModelLabel = 'Мероприятия';
+    
+    // Используем ID для маршрутов в админке, несмотря на то что модель использует slug
+    protected static ?string $recordRouteKeyName = 'id';
 
     public static function form(Form $form): Form
     {
@@ -40,6 +43,14 @@ class EventResource extends Resource
                                             ->label('Название')
                                             ->required()
                                             ->maxLength(255)
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
+                                                if ($operation !== 'create') {
+                                                    return;
+                                                }
+                                                
+                                                $set('slug', \Illuminate\Support\Str::slug($state));
+                                            })
                                             ->columnSpanFull(),
                                         
                                         Forms\Components\TextInput::make('subtitle')
@@ -49,8 +60,10 @@ class EventResource extends Resource
                                         
                                         Forms\Components\TextInput::make('slug')
                                             ->label('URL (slug)')
+                                            ->required()
                                             ->unique(ignoreRecord: true)
-                                            ->maxLength(255),
+                                            ->maxLength(255)
+                                            ->helperText('Автоматически генерируется из названия при создании'),
                                         
                                         Forms\Components\FileUpload::make('image')
                                             ->label('Главное изображение')
