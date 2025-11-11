@@ -70,12 +70,15 @@ task('filament:optimize', function () {
     run('cd {{release_path}} && {{bin/php}} artisan filament:optimize');
 });
 
-desc('Clear all caches');
+desc('Clear all caches (safe, no DB connection)');
 task('cache:clear-all', function () {
-    run('cd {{release_path}} && {{bin/php}} artisan config:clear');
-    run('cd {{release_path}} && {{bin/php}} artisan route:clear');
-    run('cd {{release_path}} && {{bin/php}} artisan view:clear');
-    run('cd {{release_path}} && {{bin/php}} artisan cache:clear');
+    // Очищаем кеш через удаление файлов, чтобы не подключаться к БД
+    run('cd {{release_path}} && rm -rf bootstrap/cache/*.php');
+    run('cd {{release_path}} && {{bin/php}} artisan config:clear || true');
+    run('cd {{release_path}} && {{bin/php}} artisan route:clear || true');
+    run('cd {{release_path}} && {{bin/php}} artisan view:clear || true');
+    
+    info('✓ Cache cleared successfully (no DB required)');
 });
 
 desc('Restart PHP-FPM');
@@ -118,8 +121,7 @@ task('node:setup', function () {
 
 desc('Setup production .env file');
 task('env:setup', function () {
-    $envContent = <<<'ENV'
-APP_NAME="Camp Events API"
+    $envContent = 'APP_NAME="Camp Events API"
 APP_ENV=production
 APP_KEY=base64:As8GNumvAJn7izUaJHM2fSWcxhmUA8+9wcBCOhuLz4E=
 APP_DEBUG=false
@@ -155,7 +157,7 @@ BROADCAST_CONNECTION=log
 FILESYSTEM_DISK=local
 QUEUE_CONNECTION=database
 
-CACHE_STORE=database
+CACHE_STORE=file
 
 MEMCACHED_HOST=127.0.0.1
 
@@ -179,14 +181,13 @@ AWS_DEFAULT_REGION=us-east-1
 AWS_BUCKET=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 
-VITE_APP_NAME="${APP_NAME}"
-ENV;
+VITE_APP_NAME="${APP_NAME}"';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
     
-    // Записываем .env файл
-    run("cat > {{deploy_path}}/shared/.env << 'ENVFILE'\n{$envContent}\nENVFILE");
+    // Записываем .env файл через echo
+    run("echo " . escapeshellarg($envContent) . " > {{deploy_path}}/shared/.env");
     
     info('✅ Production .env file created successfully!');
     info('📍 Location: {{deploy_path}}/shared/.env');
