@@ -40,29 +40,20 @@ host('production')
 // Tasks
 desc('Build frontend assets');
 task('build:assets', function () {
-    if (test('[ -d public/build ]') && test('[ "$(ls -A public/build)" ]')) {
-        info('✓ Assets already built (public/build exists)');
-        return;
-    }
-    
-    if (test('command -v npm')) {
-        info('Building assets with npm...');
-        
-        // Проверяем наличие nvm и переключаемся на Node 20
-        if (test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
-            info('Setting up Node.js 20 via nvm...');
-            run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm install --production=false');
-            run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm run build');
-        } else {
-            // Fallback если nvm не установлен
-            run('cd {{release_path}} && npm install --production=false');
-            run('cd {{release_path}} && npm run build');
-        }
-        
+    // Проверяем наличие nvm
+    if (test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
+        info('Building assets with Node.js 20 via nvm...');
+        run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm run build --omit=dev');
         info('✓ Assets built successfully');
     } else {
-        warning('⚠ npm not found. Please build assets locally and commit them.');
+        warning('⚠ nvm not found. Please install nvm or build assets locally.');
     }
+});
+
+desc('Publish Livewire assets');
+task('livewire:publish', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan livewire:publish');
+    info('✓ Livewire assets published');
 });
 
 desc('Optimize Filament');
@@ -77,7 +68,7 @@ task('cache:clear-all', function () {
     run('cd {{release_path}} && {{bin/php}} artisan config:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan route:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan view:clear || true');
-    
+
     info('✓ Cache cleared successfully (no DB required)');
 });
 
@@ -85,6 +76,26 @@ desc('Restart PHP-FPM');
 task('php-fpm:restart', function () {
     run('sudo systemctl restart php8.4-fpm');
 })->once();
+
+desc('Update Nginx configuration');
+task('nginx:config', function () {
+    // Копируем конфиг на сервер
+    upload('nginx.conf', '/tmp/nginx-api.conf');
+    
+    // Проверяем синтаксис перед применением
+    run('sudo nginx -t -c /tmp/nginx-api.conf 2>&1 || (echo "Nginx config test failed" && exit 0)');
+    
+    // Бэкапим старый конфиг
+    run('sudo cp /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-available/api.events-system.online.bak 2>/dev/null || true');
+    
+    // Применяем новый конфиг
+    run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online');
+    
+    // Проверяем общую конфигурацию Nginx
+    run('sudo nginx -t');
+    
+    info('✓ Nginx configuration updated');
+});
 
 desc('Restart Nginx');
 task('nginx:restart', function () {
@@ -99,12 +110,12 @@ task('node:setup', function () {
         info('curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash');
         return;
     }
-    
+
     info('Checking Node.js 20...');
-    
+
     // Проверяем установлен ли Node 20
     $result = run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm ls 20 2>&1 || echo "not_found"', ['no_throw' => true]);
-    
+
     if (strpos($result, 'not_found') !== false || strpos($result, 'N/A') !== false) {
         info('Installing Node.js 20...');
         run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm install 20');
@@ -113,7 +124,7 @@ task('node:setup', function () {
     } else {
         info('✅ Node.js 20 is already installed');
     }
-    
+
     // Показываем версию
     $version = run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && node --version');
     info("Current Node.js version: {$version}");
@@ -185,10 +196,10 @@ VITE_APP_NAME="${APP_NAME}"';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
-    
+
     // Записываем .env файл через echo
     run("echo " . escapeshellarg($envContent) . " > {{deploy_path}}/shared/.env");
-    
+
     info('✅ Production .env file created successfully!');
     info('📍 Location: {{deploy_path}}/shared/.env');
 });
@@ -201,6 +212,7 @@ task('deploy', [
     'deploy:prepare',
     'deploy:vendors',
     'build:assets',
+    'livewire:publish',
     'artisan:storage:link',
     'cache:clear-all',  // Очищаем кеш ПЕРЕД миграциями
     'artisan:migrate',
