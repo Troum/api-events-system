@@ -40,13 +40,12 @@ host('production')
 // Tasks
 desc('Build frontend assets');
 task('build:assets', function () {
-    // Проверяем наличие nvm
     if (test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
         info('Building assets with Node.js 20 via nvm...');
         run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm run build --omit=dev');
         info('✓ Assets built successfully');
     } else {
-        warning('⚠ nvm not found. Please install nvm or build assets locally.');
+        warning('⚠ nvm not found. Skipping asset build.');
     }
 });
 
@@ -68,7 +67,7 @@ task('cache:clear-all', function () {
     run('cd {{release_path}} && {{bin/php}} artisan config:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan route:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan view:clear || true');
-
+    
     info('✓ Cache cleared successfully (no DB required)');
 });
 
@@ -101,34 +100,6 @@ desc('Restart Nginx');
 task('nginx:restart', function () {
     run('sudo systemctl restart nginx');
 })->once();
-
-desc('Setup Node.js 20 via nvm');
-task('node:setup', function () {
-    if (!test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
-        warning('⚠ nvm is not installed on the server');
-        info('To install nvm, run:');
-        info('curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash');
-        return;
-    }
-
-    info('Checking Node.js 20...');
-
-    // Проверяем установлен ли Node 20
-    $result = run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm ls 20 2>&1 || echo "not_found"', ['no_throw' => true]);
-
-    if (strpos($result, 'not_found') !== false || strpos($result, 'N/A') !== false) {
-        info('Installing Node.js 20...');
-        run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm install 20');
-        run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm alias default 20');
-        info('✅ Node.js 20 installed successfully');
-    } else {
-        info('✅ Node.js 20 is already installed');
-    }
-
-    // Показываем версию
-    $version = run('export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && node --version');
-    info("Current Node.js version: {$version}");
-});
 
 desc('Setup production .env file');
 task('env:setup', function () {
@@ -196,15 +167,13 @@ VITE_APP_NAME="${APP_NAME}"';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
-
+    
     // Записываем .env файл через echo
     run("echo " . escapeshellarg($envContent) . " > {{deploy_path}}/shared/.env");
-
+    
     info('✅ Production .env file created successfully!');
     info('📍 Location: {{deploy_path}}/shared/.env');
 });
-
-// Hooks - убраны, так как задачи уже в основном flow
 
 // Main deploy task
 desc('Deploy the application');
