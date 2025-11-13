@@ -18,6 +18,8 @@ class TeamMemberResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     
+    protected static ?string $navigationLabel = 'Команда';
+    
     protected static ?string $navigationGroup = 'Управление командой';
     
     protected static ?string $modelLabel = 'Член команды';

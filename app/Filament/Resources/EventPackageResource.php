@@ -18,6 +18,8 @@ class EventPackageResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     
+    protected static ?string $navigationLabel = 'Пакеты событий';
+    
     protected static ?string $navigationGroup = 'Управление событиями';
     
     protected static ?string $modelLabel = 'Пакет';
