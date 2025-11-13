@@ -7,12 +7,16 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class EventPackagesRelationManager extends RelationManager
 {
     protected static string $relationship = 'eventPackages';
+
+    protected static ?string $title = 'Пакеты событий';
+
+    protected static ?string $label = 'Пакет';
+
+    protected static ?string $pluralLabel = 'Пакеты событий';
 
     public function form(Form $form): Form
     {
@@ -29,7 +33,8 @@ class EventPackagesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Название'),
             ])
             ->filters([
                 //
@@ -45,6 +50,8 @@ class EventPackagesRelationManager extends RelationManager
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Не найдено пакетов событий')
+            ->emptyStateDescription('Создайте пакет событий для старта.');
     }
 }

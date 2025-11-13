@@ -8,13 +8,18 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class TripsRelationManager extends RelationManager
 {
     protected static string $relationship = 'trips';
 
     protected static ?string $recordTitleAttribute = 'city_from';
+
+    protected static ?string $title = 'Поездки';
+
+    protected static ?string $label = 'Поездка';
+
+    protected static ?string $pluralLabel = 'Поездки';
 
     public function form(Form $form): Form
     {
@@ -152,7 +157,7 @@ class TripsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('transport_type')
                     ->label('Транспорт')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => match($state) {
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'bus' => 'Автобус',
                         'minibus' => 'Микроавтобус',
                         'car' => 'Легковой',
@@ -215,6 +220,8 @@ class TripsRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('departure_time', 'asc');
+            ->defaultSort('departure_time', 'asc')
+            ->emptyStateHeading('Не найдено поездок')
+            ->emptyStateDescription('Создайте поездку для старта.');
     }
 }
