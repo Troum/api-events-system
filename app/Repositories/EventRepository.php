@@ -36,7 +36,7 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
             ->first();
     }
 
-    public function getUpcoming(int $limit = null): Collection
+    public function getUpcoming(?int $limit = null): Collection
     {
         $query = $this->model
             ->where('date_start', '>=', now())
@@ -49,7 +49,7 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
         return $query->get();
     }
 
-    public function getPast(int $limit = null): Collection
+    public function getPast(?int $limit = null): Collection
     {
         $query = $this->model
             ->where('date_end', '<', now())
@@ -61,5 +61,26 @@ class EventRepository extends BaseRepository implements EventRepositoryInterface
 
         return $query->get();
     }
-}
 
+    public function updateBySlug(string $slug, array $data): bool
+    {
+        $model = $this->findBySlug($slug);
+
+        if (! $model) {
+            return false;
+        }
+
+        return $model->update($data);
+    }
+
+    public function deleteBySlug(string $slug): bool
+    {
+        $model = $this->findBySlug($slug);
+
+        if (! $model) {
+            return false;
+        }
+
+        return $model->delete();
+    }
+}

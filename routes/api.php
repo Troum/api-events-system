@@ -8,14 +8,21 @@ use App\Http\Controllers\Api\TripController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    Route::apiResource('events', EventController::class);
+    // Events используют slug вместо id
+    Route::get('events', [EventController::class, 'index']);
+    Route::get('events/{event:slug}', [EventController::class, 'show'])->name('events.show');
+    Route::post('events', [EventController::class, 'store']);
+    Route::put('events/{event:slug}', [EventController::class, 'update'])->name('events.update');
+    Route::patch('events/{event:slug}', [EventController::class, 'update'])->name('events.update');
+    Route::delete('events/{event:slug}', [EventController::class, 'destroy'])->name('events.destroy');
+
     Route::apiResource('trips', TripController::class);
     Route::apiResource('bookings', BookingController::class)->only(['index', 'show', 'store']);
-    
+
     Route::post('payments', [PaymentController::class, 'store']);
     Route::post('payments/yookassa/callback', [PaymentController::class, 'handleYooKassaCallback']);
     Route::post('payments/fondy/callback', [PaymentController::class, 'handleFondyCallback']);
-    
+
     // Auth & Account
     Route::post('auth/magic-link', [AuthController::class, 'sendMagicLink']);
     Route::post('auth/login', [AuthController::class, 'loginWithToken']);
@@ -23,4 +30,3 @@ Route::prefix('v1')->group(function () {
     Route::post('account/bookings/{id}/cancel', [AuthController::class, 'cancelBooking']);
     Route::post('account/bookings/{id}/refund', [AuthController::class, 'requestRefund']);
 });
-

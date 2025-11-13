@@ -17,9 +17,17 @@ class TripController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        // Если указан event_id, возвращаем поездки для конкретного события
+        // Если указан event_slug, возвращаем поездки для конкретного события
+        if ($request->has('event_slug')) {
+            $trips = $this->tripService->getByEventSlug($request->input('event_slug'));
+
+            return response()->json(['data' => $trips]);
+        }
+
+        // Обратная совместимость: если указан event_id, возвращаем поездки для конкретного события
         if ($request->has('event_id')) {
             $trips = $this->tripService->getByEventId($request->input('event_id'));
+
             return response()->json(['data' => $trips]);
         }
 
@@ -36,7 +44,7 @@ class TripController extends Controller
     {
         $trip = $this->tripService->getById($id, ['event']);
 
-        if (!$trip) {
+        if (! $trip) {
             return response()->json(['message' => 'Trip not found'], 404);
         }
 
@@ -54,7 +62,7 @@ class TripController extends Controller
     {
         $updated = $this->tripService->update($id, $request->validated());
 
-        if (!$updated) {
+        if (! $updated) {
             return response()->json(['message' => 'Trip not found'], 404);
         }
 
@@ -65,7 +73,7 @@ class TripController extends Controller
     {
         $deleted = $this->tripService->delete($id);
 
-        if (!$deleted) {
+        if (! $deleted) {
             return response()->json(['message' => 'Trip not found'], 404);
         }
 

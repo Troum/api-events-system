@@ -13,6 +13,11 @@ interface TripRepositoryInterface extends RepositoryInterface
     public function getByEventId(int $eventId): Collection;
 
     /**
+     * Get trips by event slug
+     */
+    public function getByEventSlug(string $eventSlug): Collection;
+
+    /**
      * Get trips with available seats
      */
     public function getAvailable(): Collection;
@@ -37,4 +42,3 @@ interface TripRepositoryInterface extends RepositoryInterface
      */
     public function hasAvailableSeats(int $tripId, int $requiredSeats = 1): bool;
 }
-

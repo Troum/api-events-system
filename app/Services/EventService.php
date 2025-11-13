@@ -48,7 +48,7 @@ class EventService
     /**
      * Get upcoming events
      */
-    public function getUpcoming(int $limit = null): Collection
+    public function getUpcoming(?int $limit = null): Collection
     {
         return $this->eventRepository->getUpcoming($limit);
     }
@@ -56,7 +56,7 @@ class EventService
     /**
      * Get past events
      */
-    public function getPast(int $limit = null): Collection
+    public function getPast(?int $limit = null): Collection
     {
         return $this->eventRepository->getPast($limit);
     }
@@ -67,7 +67,7 @@ class EventService
     public function create(array $data): Event
     {
         // Генерируем slug если не указан
-        if (!isset($data['slug']) && isset($data['title'])) {
+        if (! isset($data['slug']) && isset($data['title'])) {
             $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
         }
 
@@ -83,11 +83,27 @@ class EventService
     }
 
     /**
+     * Update event by slug
+     */
+    public function updateBySlug(string $slug, array $data): bool
+    {
+        return $this->eventRepository->updateBySlug($slug, $data);
+    }
+
+    /**
      * Delete event
      */
     public function delete(int $id): bool
     {
         return $this->eventRepository->delete($id);
+    }
+
+    /**
+     * Delete event by slug
+     */
+    public function deleteBySlug(string $slug): bool
+    {
+        return $this->eventRepository->deleteBySlug($slug);
     }
 
     /**
@@ -141,4 +157,3 @@ class EventService
         return $this->eventRepository->getWithPackages();
     }
 }
-

@@ -46,6 +46,14 @@ class TripService
     }
 
     /**
+     * Get trips by event slug
+     */
+    public function getByEventSlug(string $eventSlug): Collection
+    {
+        return $this->tripRepository->getByEventSlug($eventSlug);
+    }
+
+    /**
      * Get available trips
      */
     public function getAvailable(): Collection
@@ -109,4 +117,3 @@ class TripService
         return $this->tripRepository->hasAvailableSeats($tripId, $requiredSeats);
     }
 }
-

@@ -21,6 +21,16 @@ class TripRepository extends BaseRepository implements TripRepositoryInterface
             ->get();
     }
 
+    public function getByEventSlug(string $eventSlug): Collection
+    {
+        return $this->model
+            ->whereHas('event', function ($query) use ($eventSlug) {
+                $query->where('slug', $eventSlug);
+            })
+            ->orderBy('departure_time')
+            ->get();
+    }
+
     public function getAvailable(): Collection
     {
         return $this->model
@@ -40,8 +50,8 @@ class TripRepository extends BaseRepository implements TripRepositoryInterface
     public function incrementSeatsTaken(int $tripId, int $count = 1): bool
     {
         $trip = $this->find($tripId);
-        
-        if (!$trip) {
+
+        if (! $trip) {
             return false;
         }
 
@@ -51,32 +61,31 @@ class TripRepository extends BaseRepository implements TripRepositoryInterface
         }
 
         $trip->increment('seats_taken', $count);
-        
+
         return true;
     }
 
     public function decrementSeatsTaken(int $tripId, int $count = 1): bool
     {
         $trip = $this->find($tripId);
-        
-        if (!$trip) {
+
+        if (! $trip) {
             return false;
         }
 
         $trip->decrement('seats_taken', $count);
-        
+
         return true;
     }
 
     public function hasAvailableSeats(int $tripId, int $requiredSeats = 1): bool
     {
         $trip = $this->find($tripId);
-        
-        if (!$trip) {
+
+        if (! $trip) {
             return false;
         }
 
         return ($trip->seats_total - $trip->seats_taken) >= $requiredSeats;
     }
 }
-
