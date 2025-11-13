@@ -125,11 +125,13 @@ task('nginx:config', function () {
     // Проверяем синтаксис перед применением
     run('sudo nginx -t -c /tmp/nginx-api.conf 2>&1 || (echo "Nginx config test failed" && exit 0)');
     
-    // Бэкапим старый конфиг
+    // Бэкапим старый конфиг (оба варианта на случай если используется .conf)
     run('sudo cp /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-available/api.events-system.online.bak 2>/dev/null || true');
+    run('sudo cp /etc/nginx/sites-available/api.events-system.online.conf /etc/nginx/sites-available/api.events-system.online.conf.bak 2>/dev/null || true');
     
-    // Применяем новый конфиг
+    // Применяем новый конфиг в оба места
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online');
+    run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online.conf');
     
     // Проверяем общую конфигурацию Nginx
     run('sudo nginx -t');
