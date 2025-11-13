@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Guava\FilamentIconPicker\Forms\IconPicker;
+use Illuminate\Database\Eloquent\Model;
 
 class EventResource extends Resource
 {
@@ -26,6 +27,19 @@ class EventResource extends Resource
     
     // Используем ID для маршрутов в админке, несмотря на то что модель использует slug
     protected static ?string $recordRouteKeyName = 'id';
+
+    /**
+     * Переопределяем getUrl чтобы всегда использовать id для record параметра
+     */
+    public static function getUrl(string $name = 'index', array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?Model $tenant = null): string
+    {
+        // Если передан record как модель, используем id вместо route key
+        if (isset($parameters['record']) && $parameters['record'] instanceof Model) {
+            $parameters['record'] = $parameters['record']->getKey();
+        }
+
+        return parent::getUrl($name, $parameters, $isAbsolute, $panel, $tenant);
+    }
 
     public static function form(Form $form): Form
     {
