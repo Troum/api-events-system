@@ -61,6 +61,41 @@ task('livewire:assets', function () {
     info('✓ Livewire assets published');
 });
 
+desc('Migrate storage files to shared directory (one-time)');
+task('storage:migrate', function () {
+    $oldStorage = '{{deploy_path}}/storage';
+    $newStorage = '{{deploy_path}}/shared/storage';
+    
+    // Проверяем существует ли старая директория
+    if (test("[ -d {$oldStorage} ]")) {
+        // Создаём shared/storage если не существует
+        run("mkdir -p {$newStorage}");
+        
+        // Перемещаем файлы из старой storage в shared/storage
+        run("rsync -av {$oldStorage}/ {$newStorage}/ || true");
+        
+        info('✓ Storage files migrated to shared directory');
+        warning('⚠ Old storage directory still exists at: ' . $oldStorage);
+        warning('⚠ You can remove it manually after verifying files are accessible');
+    } else {
+        info('✓ No old storage directory found, skipping migration');
+    }
+});
+
+desc('Create storage symlink pointing to shared storage');
+task('storage:symlink', function () {
+    $link = '{{release_path}}/public/storage';
+    $target = '{{deploy_path}}/shared/storage/app/public';
+    
+    // Удаляем старый симлинк если существует
+    run("rm -f {$link}");
+    
+    // Создаём новый симлинк на shared storage
+    run("ln -sf {$target} {$link}");
+    
+    info('✓ Storage symlink created');
+});
+
 desc('Optimize Filament');
 task('filament:optimize', function () {
     run('cd {{release_path}} && {{bin/php}} artisan filament:optimize');
@@ -189,7 +224,7 @@ task('deploy', [
     'build:assets',
     'filament:assets',
     'livewire:assets',
-    'artisan:storage:link',
+    'storage:symlink',
     'cache:clear-all',  // Очищаем кеш ПЕРЕД миграциями
     'artisan:migrate',
     'artisan:view:cache',
