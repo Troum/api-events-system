@@ -55,6 +55,12 @@ task('filament:assets', function () {
     info('✓ Filament assets published');
 });
 
+desc('Publish Livewire assets');
+task('livewire:assets', function () {
+    run('cd {{release_path}} && {{bin/php}} artisan vendor:publish --tag=livewire:assets --force');
+    info('✓ Livewire assets published');
+});
+
 desc('Optimize Filament');
 task('filament:optimize', function () {
     run('cd {{release_path}} && {{bin/php}} artisan filament:optimize');
@@ -182,6 +188,7 @@ task('deploy', [
     'deploy:vendors',
     'build:assets',
     'filament:assets',
+    'livewire:assets',
     'artisan:storage:link',
     'cache:clear-all',  // Очищаем кеш ПЕРЕД миграциями
     'artisan:migrate',
