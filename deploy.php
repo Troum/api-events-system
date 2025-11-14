@@ -65,17 +65,17 @@ desc('Migrate storage files to shared directory (one-time)');
 task('storage:migrate', function () {
     $oldStorage = '{{deploy_path}}/storage';
     $newStorage = '{{deploy_path}}/shared/storage';
-    
+
     // Проверяем существует ли старая директория
     if (test("[ -d {$oldStorage} ]")) {
         // Создаём shared/storage если не существует
         run("mkdir -p {$newStorage}");
-        
+
         // Перемещаем файлы из старой storage в shared/storage
         run("rsync -av {$oldStorage}/ {$newStorage}/ || true");
-        
+
         info('✓ Storage files migrated to shared directory');
-        warning('⚠ Old storage directory still exists at: ' . $oldStorage);
+        warning('⚠ Old storage directory still exists at: '.$oldStorage);
         warning('⚠ You can remove it manually after verifying files are accessible');
     } else {
         info('✓ No old storage directory found, skipping migration');
@@ -86,13 +86,13 @@ desc('Create storage symlink pointing to shared storage');
 task('storage:symlink', function () {
     $link = '{{release_path}}/public/storage';
     $target = '{{deploy_path}}/shared/storage/app/public';
-    
+
     // Удаляем старый симлинк если существует
     run("rm -f {$link}");
-    
+
     // Создаём новый симлинк на shared storage
     run("ln -sf {$target} {$link}");
-    
+
     info('✓ Storage symlink created');
 });
 
@@ -108,7 +108,7 @@ task('cache:clear-all', function () {
     run('cd {{release_path}} && {{bin/php}} artisan config:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan route:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan view:clear || true');
-    
+
     info('✓ Cache cleared successfully (no DB required)');
 });
 
@@ -121,21 +121,21 @@ desc('Update Nginx configuration');
 task('nginx:config', function () {
     // Копируем конфиг на сервер
     upload('nginx.conf', '/tmp/nginx-api.conf');
-    
+
     // Проверяем синтаксис перед применением
     run('sudo nginx -t -c /tmp/nginx-api.conf 2>&1 || (echo "Nginx config test failed" && exit 0)');
-    
+
     // Бэкапим старый конфиг (оба варианта на случай если используется .conf)
     run('sudo cp /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-available/api.events-system.online.bak 2>/dev/null || true');
     run('sudo cp /etc/nginx/sites-available/api.events-system.online.conf /etc/nginx/sites-available/api.events-system.online.conf.bak 2>/dev/null || true');
-    
+
     // Применяем новый конфиг в оба места
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online');
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online.conf');
-    
+
     // Проверяем общую конфигурацию Nginx
     run('sudo nginx -t');
-    
+
     info('✓ Nginx configuration updated');
 });
 
@@ -206,14 +206,43 @@ AWS_DEFAULT_REGION=us-east-1
 AWS_BUCKET=
 AWS_USE_PATH_STYLE_ENDPOINT=false
 
+# ЮKassa (Россия) - https://yookassa.ru
+YOOKASSA_SHOP_ID=
+YOOKASSA_SECRET_KEY=
+
+# Stripe (International) - https://stripe.com
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# PayPal (International) - https://developer.paypal.com
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+PAYPAL_TEST_MODE=false
+
+# WEBPAY (Беларусь) - https://webpay.by
+WEBPAY_MERCHANT_ID=
+WEBPAY_SECRET_KEY=
+WEBPAY_TEST_MODE=false
+
+# Telegram бот для уведомлений
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Яндекс Карты (для СНГ, ШОС, БРИКС)
+YANDEX_MAPS_API_KEY=593670a6-8e5e-4895-9fe5-dbd37dde463a
+
+# OpenStreetMap (для остальных стран) - не требует API ключа
+# OSM_TILE_SERVER=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+
 VITE_APP_NAME="${APP_NAME}"';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
-    
+
     // Записываем .env файл через echo
-    run("echo " . escapeshellarg($envContent) . " > {{deploy_path}}/shared/.env");
-    
+    run('echo '.escapeshellarg($envContent).' > {{deploy_path}}/shared/.env');
+
     info('✅ Production .env file created successfully!');
     info('📍 Location: {{deploy_path}}/shared/.env');
 });
@@ -246,4 +275,3 @@ after('rollback', 'nginx:restart');
 
 // Если деплой провалился
 fail('deploy', 'deploy:unlock');
-

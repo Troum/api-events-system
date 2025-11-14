@@ -64,4 +64,14 @@ return [
         'chat_id' => env('TELEGRAM_CHAT_ID'),
     ],
 
+    'yandex_maps' => [
+        'api_key' => env('YANDEX_MAPS_API_KEY'),
+    ],
+
+    'openstreetmap' => [
+        // OpenStreetMap не требует API ключа
+        'tile_server' => env('OSM_TILE_SERVER', 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
+        'attribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    ],
+
 ];
