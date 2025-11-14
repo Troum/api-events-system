@@ -6,10 +6,10 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Modules\PaymentModule\Contracts\PaymentGateway;
 use App\Modules\PaymentModule\DTO\PaymentDto;
-use App\Modules\PaymentModule\Gateways\YooKassaGateway;
-use App\Modules\PaymentModule\Gateways\StripeGateway;
 use App\Modules\PaymentModule\Gateways\PayPalGateway;
+use App\Modules\PaymentModule\Gateways\StripeGateway;
 use App\Modules\PaymentModule\Gateways\WebPayGateway;
+use App\Modules\PaymentModule\Gateways\YooKassaGateway;
 use Illuminate\Http\Request;
 
 class PaymentService
@@ -72,12 +72,11 @@ class PaymentService
     private function getGateway(string $provider): PaymentGateway
     {
         return match ($provider) {
-            'yookassa' => new YooKassaGateway(),
-            'stripe' => new StripeGateway(),
-            'paypal' => new PayPalGateway(),
-            'webpay' => new WebPayGateway(),
+            'yookassa' => new YooKassaGateway,
+            'stripe' => new StripeGateway,
+            'paypal' => new PayPalGateway,
+            'webpay' => new WebPayGateway,
             default => throw new \InvalidArgumentException("Unknown payment provider: {$provider}"),
         };
     }
 }
-

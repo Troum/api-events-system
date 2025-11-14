@@ -8,8 +8,7 @@ class PaymentDto
         public readonly int $bookingId,
         public readonly float $amount,
         public readonly string $provider,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): self
     {
@@ -20,4 +19,3 @@ class PaymentDto
         );
     }
 }
-
