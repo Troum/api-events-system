@@ -38,15 +38,15 @@ class PayPalGateway implements PaymentGateway
         $cacheKey = 'paypal_access_token_'.md5($this->clientId);
 
         return Cache::remember($cacheKey, now()->addHours(8), function () {
-            $response = Http::withBasicAuth($this->clientId, $this->clientSecret)
-                ->asForm()
-                ->post("{$this->baseUrl}/v1/oauth2/token", [
-                    'grant_type' => 'client_credentials',
-                ]);
+        $response = Http::withBasicAuth($this->clientId, $this->clientSecret)
+            ->asForm()
+            ->post("{$this->baseUrl}/v1/oauth2/token", [
+                'grant_type' => 'client_credentials',
+            ]);
 
             if (! $response->successful()) {
                 $this->handlePayPalError($response, 'OAuth token retrieval');
-            }
+        }
 
             $data = $response->json();
 

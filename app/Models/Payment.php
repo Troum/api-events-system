@@ -22,10 +22,10 @@ class Payment extends Model
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
+        'amount' => 'decimal:2',
             'refunded_amount' => 'decimal:2',
             'metadata' => 'array',
-        ];
+    ];
     }
 
     public function booking(): BelongsTo
