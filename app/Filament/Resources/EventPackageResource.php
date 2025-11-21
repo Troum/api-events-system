@@ -3,27 +3,25 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EventPackageResource\Pages;
-use App\Filament\Resources\EventPackageResource\RelationManagers;
 use App\Models\EventPackage;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class EventPackageResource extends Resource
 {
     protected static ?string $model = EventPackage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
-    
+
     protected static ?string $navigationLabel = 'Пакеты событий';
-    
+
     protected static ?string $navigationGroup = 'Управление событиями';
-    
+
     protected static ?string $modelLabel = 'Пакет';
-    
+
     protected static ?string $pluralModelLabel = 'Пакеты событий';
 
     public static function form(Form $form): Form
@@ -38,16 +36,16 @@ class EventPackageResource extends Resource
                             ->required()
                             ->searchable()
                             ->preload(),
-                        
+
                         Forms\Components\TextInput::make('name')
                             ->label('Название пакета')
                             ->required()
                             ->maxLength(255),
-                        
+
                         Forms\Components\RichEditor::make('description')
                             ->label('Описание')
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\TextInput::make('price')
                             ->label('Цена')
                             ->required()
@@ -56,7 +54,7 @@ class EventPackageResource extends Resource
                             ->minValue(0),
                     ])
                     ->columns(2),
-                
+
                 Forms\Components\Section::make('Участники')
                     ->schema([
                         Forms\Components\TextInput::make('max_participants')
@@ -64,7 +62,7 @@ class EventPackageResource extends Resource
                             ->numeric()
                             ->minValue(1)
                             ->helperText('Оставьте пустым для неограниченного количества'),
-                        
+
                         Forms\Components\TextInput::make('current_participants')
                             ->label('Текущее количество')
                             ->required()
@@ -74,7 +72,7 @@ class EventPackageResource extends Resource
                             ->dehydrated(),
                     ])
                     ->columns(2),
-                
+
                 Forms\Components\Section::make('Что включено')
                     ->schema([
                         Forms\Components\Repeater::make('includes')
@@ -87,7 +85,7 @@ class EventPackageResource extends Resource
                             ->simple()
                             ->columnSpanFull(),
                     ]),
-                
+
                 Forms\Components\Section::make('Что не включено')
                     ->schema([
                         Forms\Components\Repeater::make('not_includes')
@@ -100,19 +98,19 @@ class EventPackageResource extends Resource
                             ->simple()
                             ->columnSpanFull(),
                     ]),
-                
+
                 Forms\Components\Section::make('Настройки')
                     ->schema([
                         Forms\Components\Toggle::make('is_active')
                             ->label('Активен')
                             ->default(true)
                             ->required(),
-                        
+
                         Forms\Components\Toggle::make('is_featured')
                             ->label('Рекомендуемый')
                             ->default(false)
                             ->required(),
-                        
+
                         Forms\Components\TextInput::make('order')
                             ->label('Порядок сортировки')
                             ->numeric()
@@ -131,38 +129,38 @@ class EventPackageResource extends Resource
                     ->label('Событие')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Название')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('price')
                     ->label('Цена')
                     ->money('RUB')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('participants')
                     ->label('Участники')
-                    ->getStateUsing(fn ($record) => "{$record->current_participants}" . 
+                    ->getStateUsing(fn ($record) => "{$record->current_participants}".
                         ($record->max_participants ? " / {$record->max_participants}" : ' / ∞'))
                     ->badge()
-                    ->color(fn ($record) => $record->max_participants && 
+                    ->color(fn ($record) => $record->max_participants &&
                         $record->current_participants >= $record->max_participants ? 'danger' : 'success'),
-                
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean(),
-                
+
                 Tables\Columns\IconColumn::make('is_featured')
                     ->label('Рекомендуемый')
                     ->boolean(),
-                
+
                 Tables\Columns\TextColumn::make('order')
                     ->label('Порядок')
                     ->numeric()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime()
@@ -175,10 +173,10 @@ class EventPackageResource extends Resource
                     ->relationship('event', 'title')
                     ->searchable()
                     ->preload(),
-                
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Активен'),
-                
+
                 Tables\Filters\TernaryFilter::make('is_featured')
                     ->label('Рекомендуемый'),
             ])

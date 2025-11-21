@@ -4,13 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TripResource\Pages;
 use App\Models\Trip;
-use App\Models\Event;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Guava\FilamentIconPicker\Forms\IconPicker;
 
 class TripResource extends Resource
 {
@@ -76,7 +74,9 @@ class TripResource extends Resource
                                             ->label('Изображения')
                                             ->image()
                                             ->multiple()
+                                            ->disk('public')
                                             ->directory('trips')
+                                            ->visibility('public')
                                             ->columnSpanFull(),
                                     ])->columns(2),
 
@@ -517,11 +517,9 @@ class TripResource extends Resource
                 Tables\Columns\TextColumn::make('seats_taken')
                     ->label('Мест')
                     ->badge()
-                    ->formatStateUsing(fn ($state, $record) =>
-                        "{$state}/{$record->seats_total}"
+                    ->formatStateUsing(fn ($state, $record) => "{$state}/{$record->seats_total}"
                     )
-                    ->color(fn ($record) =>
-                        $record->seats_taken >= $record->seats_total ? 'danger' : 'success'
+                    ->color(fn ($record) => $record->seats_taken >= $record->seats_total ? 'danger' : 'success'
                     ),
 
                 Tables\Columns\SelectColumn::make('status')

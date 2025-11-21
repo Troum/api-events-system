@@ -18,7 +18,9 @@ class BookingResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
 
     protected static ?string $modelLabel = 'Бронирование';
+
     protected static ?string $pluralModelLabel = 'Бронирования';
+
     protected static ?string $navigationLabel = 'Бронирования';
 
     public static function form(Form $form): Form
@@ -120,8 +122,8 @@ class BookingResource extends Resource
                 Tables\Columns\TextColumn::make('payment_gateway')
                     ->label('Способ оплаты')
                     ->badge()
-                    ->formatStateUsing(fn($state) => $state?->label())
-                    ->color(fn($state) => match ($state) {
+                    ->formatStateUsing(fn ($state) => $state?->label())
+                    ->color(fn ($state) => match ($state) {
                         PaymentGatewayEnum::PAY_ON_ARRIVAL => 'gray',
                         PaymentGatewayEnum::YOOKASSA => 'info',
                         PaymentGatewayEnum::STRIPE => 'purple',
@@ -133,14 +135,14 @@ class BookingResource extends Resource
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Статус оплаты')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'paid' => 'success',
                         'failed' => 'danger',
                         'cancelled' => 'gray',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'Ожидает',
                         'paid' => 'Оплачено',
                         'failed' => 'Ошибка',

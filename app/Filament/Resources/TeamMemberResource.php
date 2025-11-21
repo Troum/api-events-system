@@ -10,20 +10,19 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class TeamMemberResource extends Resource
 {
     protected static ?string $model = TeamMember::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    
+
     protected static ?string $navigationLabel = 'Команда';
-    
+
     protected static ?string $navigationGroup = 'Управление командой';
-    
+
     protected static ?string $modelLabel = 'Член команды';
-    
+
     protected static ?string $pluralModelLabel = 'Команда';
 
     public static function form(Form $form): Form
@@ -36,7 +35,7 @@ class TeamMemberResource extends Resource
                             ->label('Имя')
                             ->required()
                             ->maxLength(255),
-                        
+
                         Forms\Components\Select::make('role')
                             ->label('Роль')
                             ->options([
@@ -48,34 +47,36 @@ class TeamMemberResource extends Resource
                             ])
                             ->required()
                             ->searchable(),
-                        
+
                         Forms\Components\FileUpload::make('photo')
                             ->label('Фото')
                             ->image()
+                            ->disk('public')
                             ->directory('team-members')
+                            ->visibility('public')
                             ->imageEditor()
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\RichEditor::make('bio')
                             ->label('Биография')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
-                
+
                 Forms\Components\Section::make('Контактная информация')
                     ->schema([
                         Forms\Components\TextInput::make('email')
                             ->label('Email')
                             ->email()
                             ->maxLength(255),
-                        
+
                         Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel()
                             ->maxLength(255),
                     ])
                     ->columns(2),
-                
+
                 Forms\Components\Section::make('Социальные сети')
                     ->schema([
                         Forms\Components\Repeater::make('social_links')
@@ -91,7 +92,7 @@ class TeamMemberResource extends Resource
                                         'whatsapp' => 'WhatsApp',
                                     ])
                                     ->required(),
-                                
+
                                 Forms\Components\TextInput::make('url')
                                     ->label('URL')
                                     ->url()
@@ -100,7 +101,7 @@ class TeamMemberResource extends Resource
                             ->columns(2)
                             ->columnSpanFull(),
                     ]),
-                
+
                 Forms\Components\Section::make('Дополнительно')
                     ->schema([
                         Forms\Components\TextInput::make('rating')
@@ -110,7 +111,7 @@ class TeamMemberResource extends Resource
                             ->maxValue(5)
                             ->step(0.1)
                             ->default(0),
-                        
+
                         Forms\Components\Toggle::make('is_active')
                             ->label('Активен')
                             ->default(true)
@@ -127,41 +128,41 @@ class TeamMemberResource extends Resource
                 Tables\Columns\ImageColumn::make('photo')
                     ->label('Фото')
                     ->circular(),
-                
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Имя')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('role')
                     ->label('Роль')
                     ->badge()
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('phone')
                     ->label('Телефон')
                     ->searchable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('rating')
                     ->label('Рейтинг')
                     ->numeric(decimalPlaces: 1)
                     ->sortable(),
-                
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Активен')
                     ->boolean(),
-                
+
                 Tables\Columns\TextColumn::make('events_count')
                     ->label('Событий')
                     ->counts('events')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime()
@@ -178,7 +179,7 @@ class TeamMemberResource extends Resource
                         'Ассистент' => 'Ассистент',
                         'Координатор' => 'Координатор',
                     ]),
-                
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Активен'),
             ])

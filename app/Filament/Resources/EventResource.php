@@ -10,7 +10,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Guava\FilamentIconPicker\Forms\IconPicker;
 use Illuminate\Database\Eloquent\Model;
 
 class EventResource extends Resource
@@ -18,13 +17,13 @@ class EventResource extends Resource
     protected static ?string $model = Event::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    
+
     protected static ?string $navigationLabel = 'Мероприятия';
-    
+
     protected static ?string $modelLabel = 'Мероприятие';
-    
+
     protected static ?string $pluralModelLabel = 'Мероприятия';
-    
+
     // Используем ID для маршрутов в админке, несмотря на то что модель использует slug
     protected static ?string $recordRouteKeyName = 'id';
 
@@ -62,86 +61,88 @@ class EventResource extends Resource
                                                 if ($operation !== 'create') {
                                                     return;
                                                 }
-                                                
+
                                                 $set('slug', \Illuminate\Support\Str::slug($state));
                                             })
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\TextInput::make('subtitle')
                                             ->label('Подзаголовок')
                                             ->maxLength(255)
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\TextInput::make('slug')
                                             ->label('URL (slug)')
                                             ->required()
                                             ->unique(ignoreRecord: true)
                                             ->maxLength(255)
                                             ->helperText('Автоматически генерируется из названия при создании'),
-                                        
+
                                         Forms\Components\FileUpload::make('image')
                                             ->label('Главное изображение')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('events')
+                                            ->visibility('public')
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\Textarea::make('description')
                                             ->label('Краткое описание')
                                             ->rows(3)
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\RichEditor::make('hero_description')
                                             ->label('Описание в Hero секции')
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\RichEditor::make('about')
                                             ->label('Подробное описание')
                                             ->columnSpanFull(),
                                     ])->columns(2),
-                                
+
                                 Forms\Components\Section::make('Даты и локация')
                                     ->schema([
                                         Forms\Components\DatePicker::make('date_start')
                                             ->label('Дата начала')
                                             ->required(),
-                                        
+
                                         Forms\Components\DatePicker::make('date_end')
                                             ->label('Дата окончания')
                                             ->required(),
-                                        
+
                                         Forms\Components\TextInput::make('location')
                                             ->label('Локация (краткая)')
                                             ->required()
                                             ->maxLength(255),
-                                        
+
                                         Forms\Components\TextInput::make('venue_name')
                                             ->label('Название места проведения')
                                             ->maxLength(255),
-                                        
+
                                         Forms\Components\Textarea::make('venue_description')
                                             ->label('Описание места')
                                             ->rows(3)
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\TextInput::make('venue_address')
                                             ->label('Адрес')
                                             ->maxLength(255)
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\TextInput::make('venue_latitude')
                                             ->label('Широта')
                                             ->numeric(),
-                                        
+
                                         Forms\Components\TextInput::make('venue_longitude')
                                             ->label('Долгота')
                                             ->numeric(),
-                                        
+
                                         Forms\Components\TextInput::make('airport_distance')
                                             ->label('Расстояние от аэропорта')
                                             ->maxLength(255),
                                     ])->columns(2),
                             ]),
-                        
+
                         // Особенности
                         Forms\Components\Tabs\Tab::make('Особенности')
                             ->icon('heroicon-o-star')
@@ -152,11 +153,11 @@ class EventResource extends Resource
                                         Forms\Components\TextInput::make('title')
                                             ->label('Заголовок')
                                             ->required(),
-                                        
+
                                         Forms\Components\Textarea::make('description')
                                             ->label('Описание')
                                             ->rows(3),
-                                        
+
                                         Forms\Components\Select::make('icon')
                                             ->label('Иконка (Lucide)')
                                             ->options([
@@ -169,14 +170,14 @@ class EventResource extends Resource
                                                 'lucide-award' => '🏅 Награда',
                                                 'lucide-medal' => '🥇 Медаль',
                                                 'lucide-crown' => '👑 Корона',
-                                                
+
                                                 // Люди и команда
                                                 'lucide-users' => '👥 Группа',
                                                 'lucide-user-check' => '✅ Проверенный',
                                                 'lucide-heart' => '❤️ Сердце',
                                                 'lucide-heart-handshake' => '🤝 Рукопожатие',
                                                 'lucide-graduation-cap' => '🎓 Образование',
-                                                
+
                                                 // Локация и путешествия
                                                 'lucide-map-pin' => '📍 Метка',
                                                 'lucide-map' => '🗺️ Карта',
@@ -185,14 +186,14 @@ class EventResource extends Resource
                                                 'lucide-palmtree' => '🌴 Пальма',
                                                 'lucide-mountain' => '⛰️ Гора',
                                                 'lucide-waves' => '🌊 Волны',
-                                                
+
                                                 // Спорт и активность
                                                 'lucide-dumbbell' => '🏋️ Гантели',
                                                 'lucide-bike' => '🚴 Велосипед',
                                                 'lucide-footprints' => '👣 Следы',
                                                 'lucide-activity' => '📊 Активность',
                                                 'lucide-trending-up' => '📈 Рост',
-                                                
+
                                                 // Время и события
                                                 'lucide-calendar' => '📅 Календарь',
                                                 'lucide-calendar-days' => '📆 Дни',
@@ -202,7 +203,7 @@ class EventResource extends Resource
                                                 'lucide-sunset' => '🌇 Закат',
                                                 'lucide-sun' => '☀️ Солнце',
                                                 'lucide-moon' => '🌙 Луна',
-                                                
+
                                                 // Технологии
                                                 'lucide-camera' => '📷 Камера',
                                                 'lucide-video' => '📹 Видео',
@@ -210,13 +211,13 @@ class EventResource extends Resource
                                                 'lucide-mic' => '🎤 Микрофон',
                                                 'lucide-lightbulb' => '💡 Идея',
                                                 'lucide-rocket' => '🚀 Ракета',
-                                                
+
                                                 // Безопасность и качество
                                                 'lucide-shield' => '🛡️ Щит',
                                                 'lucide-shield-check' => '✅ Защита',
                                                 'lucide-badge-check' => '✔️ Проверено',
                                                 'lucide-verified' => '✓ Верифицировано',
-                                                
+
                                                 // Прочее
                                                 'lucide-globe' => '🌍 Глобус',
                                                 'lucide-target' => '🎯 Цель',
@@ -232,7 +233,7 @@ class EventResource extends Resource
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ]),
-                        
+
                         // Программа
                         Forms\Components\Tabs\Tab::make('Программа')
                             ->icon('heroicon-o-calendar')
@@ -243,18 +244,18 @@ class EventResource extends Resource
                                         Forms\Components\TextInput::make('date')
                                             ->label('Дата/День')
                                             ->required(),
-                                        
+
                                         Forms\Components\TextInput::make('title')
                                             ->label('Название дня')
                                             ->placeholder('День заезда, День отдыха и т.д.'),
-                                        
+
                                         Forms\Components\Repeater::make('activities')
                                             ->label('Активности')
                                             ->schema([
                                                 Forms\Components\TextInput::make('time')
                                                     ->label('Время')
                                                     ->placeholder('10:00 - 11:30'),
-                                                
+
                                                 Forms\Components\Textarea::make('description')
                                                     ->label('Описание')
                                                     ->rows(2),
@@ -266,7 +267,7 @@ class EventResource extends Resource
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ]),
-                        
+
                         // Инфраструктура
                         Forms\Components\Tabs\Tab::make('Инфраструктура')
                             ->icon('heroicon-o-building-office-2')
@@ -277,23 +278,25 @@ class EventResource extends Resource
                                         Forms\Components\TextInput::make('name')
                                             ->label('Название')
                                             ->required(),
-                                        
+
                                         Forms\Components\Textarea::make('description')
                                             ->label('Описание')
                                             ->rows(3),
-                                        
+
                                         Forms\Components\FileUpload::make('images')
                                             ->label('Изображения')
                                             ->image()
                                             ->multiple()
+                                            ->disk('public')
                                             ->directory('infrastructure')
+                                            ->visibility('public')
                                             ->columnSpanFull(),
                                     ])
                                     ->columns(1)
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ]),
-                        
+
                         // Команда
                         Forms\Components\Tabs\Tab::make('Команда')
                             ->icon('heroicon-o-user-group')
@@ -304,32 +307,66 @@ class EventResource extends Resource
                                         Forms\Components\TextInput::make('name')
                                             ->label('Имя')
                                             ->required(),
-                                        
+
                                         Forms\Components\TextInput::make('role')
                                             ->label('Роль/Должность'),
-                                        
+
                                         Forms\Components\Textarea::make('bio')
                                             ->label('Биография')
                                             ->rows(3),
-                                        
+
                                         Forms\Components\FileUpload::make('photo')
                                             ->label('Фото')
                                             ->image()
-                                            ->directory('team'),
-                                        
+                                            ->disk('public')
+                                            ->directory('team')
+                                            ->visibility('public'),
+
                                         Forms\Components\TextInput::make('instagram')
                                             ->label('Instagram')
-                                            ->prefix('@'),
-                                        
+                                            ->prefix('@')
+                                            ->placeholder('username')
+                                            ->rules(['nullable', 'regex:/^@?[a-zA-Z0-9._]+$/'])
+                                            ->helperText('Введите username (например: username или @username)')
+                                            ->dehydrateStateUsing(function ($state) {
+                                                if (empty($state)) {
+                                                    return null;
+                                                }
+                                                // Убираем @ если есть, затем добавляем обратно для единообразия
+                                                $state = ltrim($state, '@');
+
+                                                return '@'.$state;
+                                            })
+                                            ->formatStateUsing(function ($state) {
+                                                // При загрузке убираем @ для отображения в поле с prefix
+                                                return $state ? ltrim($state, '@') : null;
+                                            }),
+
                                         Forms\Components\TextInput::make('telegram')
                                             ->label('Telegram')
-                                            ->prefix('@'),
+                                            ->prefix('@')
+                                            ->placeholder('username')
+                                            ->rules(['nullable', 'regex:/^@?[a-zA-Z0-9_]+$/'])
+                                            ->helperText('Введите username (например: username или @username)')
+                                            ->dehydrateStateUsing(function ($state) {
+                                                if (empty($state)) {
+                                                    return null;
+                                                }
+                                                // Убираем @ если есть, затем добавляем обратно для единообразия
+                                                $state = ltrim($state, '@');
+
+                                                return '@'.$state;
+                                            })
+                                            ->formatStateUsing(function ($state) {
+                                                // При загрузке убираем @ для отображения в поле с prefix
+                                                return $state ? ltrim($state, '@') : null;
+                                            }),
                                     ])
                                     ->columns(2)
                                     ->collapsible()
                                     ->columnSpanFull(),
                             ]),
-                        
+
                         // Пакеты и цены
                         Forms\Components\Tabs\Tab::make('Стоимость')
                             ->icon('heroicon-o-currency-dollar')
@@ -340,7 +377,7 @@ class EventResource extends Resource
                                         Forms\Components\TextInput::make('name')
                                             ->label('Название пакета')
                                             ->required(),
-                                        
+
                                         Forms\Components\Select::make('icon')
                                             ->label('Иконка (Lucide)')
                                             ->options([
@@ -349,14 +386,14 @@ class EventResource extends Resource
                                                 'lucide-box' => '📦 Стандарт',
                                                 'lucide-gift' => '🎁 Подарок',
                                                 'lucide-shopping-bag' => '🛍️ Покупка',
-                                                
+
                                                 // Премиум
                                                 'lucide-star' => '⭐ Премиум',
                                                 'lucide-sparkles' => '✨ Эксклюзив',
                                                 'lucide-crown' => '👑 Королевский',
                                                 'lucide-gem' => '💎 Бриллиант',
                                                 'lucide-diamond' => '💠 Платина',
-                                                
+
                                                 // Специальные
                                                 'lucide-rocket' => '🚀 Супер',
                                                 'lucide-zap' => '⚡ Быстрый старт',
@@ -364,12 +401,12 @@ class EventResource extends Resource
                                                 'lucide-trophy' => '🏆 VIP',
                                                 'lucide-award' => '🏅 Победитель',
                                                 'lucide-medal' => '🥇 Золотой',
-                                                
+
                                                 // Популярные
                                                 'lucide-heart' => '❤️ Популярный',
                                                 'lucide-trending-up' => '📈 Топ',
                                                 'lucide-star-half' => '⭐ Рекомендуем',
-                                                
+
                                                 // Акции
                                                 'lucide-tag' => '🏷️ Акция',
                                                 'lucide-percent' => '💯 Скидка',
@@ -379,21 +416,21 @@ class EventResource extends Resource
                                             ->default('lucide-package')
                                             ->helperText('Иконки с lucide.dev')
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\TextInput::make('price')
                                             ->label('Цена')
                                             ->numeric()
                                             ->prefix('€')
                                             ->required(),
-                                        
+
                                         Forms\Components\TextInput::make('price_note')
                                             ->label('Примечание к цене')
                                             ->placeholder('с человека'),
-                                        
+
                                         Forms\Components\Textarea::make('description')
                                             ->label('Описание пакета')
                                             ->rows(2),
-                                        
+
                                         Forms\Components\Repeater::make('includes')
                                             ->label('Что входит')
                                             ->schema([
@@ -403,14 +440,14 @@ class EventResource extends Resource
                                             ])
                                             ->defaultItems(0)
                                             ->collapsible(),
-                                        
+
                                         Forms\Components\Toggle::make('is_featured')
                                             ->label('Рекомендуемый пакет'),
                                     ])
                                     ->columns(2)
                                     ->collapsible()
                                     ->columnSpanFull(),
-                                
+
                                 Forms\Components\Repeater::make('not_included')
                                     ->label('Что не входит в стоимость')
                                     ->schema([
@@ -421,7 +458,7 @@ class EventResource extends Resource
                                     ->columnSpanFull()
                                     ->collapsible(),
                             ]),
-                        
+
                         // Дополнительно
                         Forms\Components\Tabs\Tab::make('Дополнительно')
                             ->icon('heroicon-o-plus-circle')
@@ -437,10 +474,10 @@ class EventResource extends Resource
                                                         'return' => 'Обратно',
                                                     ])
                                                     ->required(),
-                                                
+
                                                 Forms\Components\TextInput::make('airline')
                                                     ->label('Авиакомпания'),
-                                                
+
                                                 Forms\Components\Textarea::make('details')
                                                     ->label('Детали рейса')
                                                     ->rows(3),
@@ -448,7 +485,7 @@ class EventResource extends Resource
                                             ->columns(3)
                                             ->collapsible(),
                                     ])->collapsible(),
-                                
+
                                 Forms\Components\Section::make('FAQ')
                                     ->schema([
                                         Forms\Components\Repeater::make('faq')
@@ -456,7 +493,7 @@ class EventResource extends Resource
                                                 Forms\Components\TextInput::make('question')
                                                     ->label('Вопрос')
                                                     ->required(),
-                                                
+
                                                 Forms\Components\Textarea::make('answer')
                                                     ->label('Ответ')
                                                     ->rows(3)
@@ -465,25 +502,31 @@ class EventResource extends Resource
                                             ->columns(1)
                                             ->collapsible(),
                                     ])->collapsible(),
-                                
+
                                 Forms\Components\Section::make('Галерея')
                                     ->schema([
                                         Forms\Components\FileUpload::make('gallery')
                                             ->label('Изображения')
                                             ->image()
                                             ->multiple()
+                                            ->disk('public')
                                             ->directory('gallery')
+                                            ->visibility('public')
+                                            ->fetchFileInformation(false)
                                             ->columnSpanFull(),
-                                        
+
                                         Forms\Components\FileUpload::make('hero_images')
                                             ->label('Hero слайдер')
                                             ->image()
                                             ->multiple()
+                                            ->disk('public')
                                             ->directory('hero')
+                                            ->visibility('public')
+                                            ->fetchFileInformation(false)
                                             ->columnSpanFull(),
                                     ])->collapsible(),
                             ]),
-                        
+
                         // Контакты и настройки
                         Forms\Components\Tabs\Tab::make('Настройки')
                             ->icon('heroicon-o-cog-6-tooth')
@@ -492,55 +535,73 @@ class EventResource extends Resource
                                     ->schema([
                                         Forms\Components\TextInput::make('organizer_name')
                                             ->label('Имя организатора'),
-                                        
+
                                         Forms\Components\TextInput::make('organizer_phone')
                                             ->label('Телефон')
                                             ->tel(),
-                                        
+
                                         Forms\Components\TextInput::make('organizer_email')
                                             ->label('Email')
                                             ->email(),
-                                        
+
                                         Forms\Components\TextInput::make('organizer_telegram')
                                             ->label('Telegram')
-                                            ->prefix('@'),
-                                        
+                                            ->prefix('@')
+                                            ->placeholder('username')
+                                            ->rules(['nullable', 'regex:/^@?[a-zA-Z0-9_]+$/'])
+                                            ->helperText('Введите username (например: username или @username)')
+                                            ->dehydrateStateUsing(function ($state) {
+                                                if (empty($state)) {
+                                                    return null;
+                                                }
+                                                // Убираем @ если есть, затем добавляем обратно для единообразия
+                                                $state = ltrim($state, '@');
+
+                                                return '@'.$state;
+                                            })
+                                            ->formatStateUsing(function ($state) {
+                                                // При загрузке убираем @ для отображения в поле с prefix
+                                                return $state ? ltrim($state, '@') : null;
+                                            }),
+
                                         Forms\Components\TextInput::make('organizer_whatsapp')
                                             ->label('WhatsApp'),
                                     ])->columns(2),
-                                
+
                                 Forms\Components\Section::make('Настройки отображения')
                                     ->schema([
                                         Forms\Components\Toggle::make('show_booking_form')
                                             ->label('Показывать форму бронирования')
                                             ->default(true),
-                                        
+
                                         Forms\Components\Toggle::make('show_countdown')
                                             ->label('Показывать обратный отсчет'),
-                                        
+
                                         Forms\Components\TextInput::make('max_participants')
                                             ->label('Максимум участников')
                                             ->numeric(),
-                                        
+
                                         Forms\Components\TextInput::make('current_participants')
                                             ->label('Текущее количество участников')
                                             ->numeric()
                                             ->default(0),
                                     ])->columns(2),
-                                
+
                                 Forms\Components\Section::make('SEO')
                                     ->schema([
                                         Forms\Components\Textarea::make('meta_description')
                                             ->label('Meta описание')
                                             ->rows(2),
-                                        
+
                                         Forms\Components\TagsInput::make('meta_keywords')
                                             ->label('Ключевые слова'),
-                                        
+
                                         Forms\Components\FileUpload::make('og_image')
                                             ->label('Open Graph изображение')
                                             ->image()
-                                            ->directory('og'),
+                                            ->disk('public')
+                                            ->directory('og')
+                                            ->visibility('public'),
                                     ])->collapsible(),
                             ]),
                     ])
@@ -554,39 +615,38 @@ class EventResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('image')
                     ->label('Изображение'),
-                
+
                 Tables\Columns\TextColumn::make('title')
                     ->label('Название')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('location')
                     ->label('Локация')
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('date_start')
                     ->label('Начало')
                     ->date('d.m.Y')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('date_end')
                     ->label('Окончание')
                     ->date('d.m.Y')
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('current_participants')
                     ->label('Участников')
                     ->badge()
-                    ->formatStateUsing(fn ($state, $record) => 
-                        $record->max_participants 
-                            ? "{$state}/{$record->max_participants}" 
+                    ->formatStateUsing(fn ($state, $record) => $record->max_participants
+                            ? "{$state}/{$record->max_participants}"
                             : $state
                     ),
-                
+
                 Tables\Columns\IconColumn::make('show_booking_form')
                     ->label('Бронирование')
                     ->boolean(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создано')
                     ->dateTime('d.m.Y H:i')
