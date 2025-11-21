@@ -83,6 +83,29 @@ class BookingResource extends Resource
                             ->required()
                             ->native(false),
                     ])->columns(2),
+
+                Forms\Components\Section::make('Статус бронирования')
+                    ->schema([
+                        Forms\Components\Select::make('status')
+                            ->label('Статус бронирования')
+                            ->options([
+                                'pending' => 'Ожидает подтверждения',
+                                'confirmed' => 'Подтверждено',
+                                'cancelled' => 'Отменено',
+                                'refund_requested' => 'Запрошен возврат',
+                                'refunded' => 'Возвращено',
+                            ])
+                            ->default('pending')
+                            ->required()
+                            ->native(false)
+                            ->helperText('Измените статус для подтверждения или отмены бронирования'),
+
+                        Forms\Components\Textarea::make('cancellation_reason')
+                            ->label('Причина отмены')
+                            ->rows(3)
+                            ->visible(fn ($get) => $get('status') === 'cancelled')
+                            ->maxLength(65535),
+                    ])->columns(1),
             ]);
     }
 
@@ -150,6 +173,27 @@ class BookingResource extends Resource
                         default => $state,
                     }),
 
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Статус бронирования')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'confirmed' => 'success',
+                        'pending' => 'warning',
+                        'cancelled' => 'danger',
+                        'refund_requested' => 'info',
+                        'refunded' => 'gray',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'Ожидает подтверждения',
+                        'confirmed' => 'Подтверждено',
+                        'cancelled' => 'Отменено',
+                        'refund_requested' => 'Запрошен возврат',
+                        'refunded' => 'Возвращено',
+                        default => $state,
+                    })
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создано')
                     ->dateTime('d.m.Y H:i')
@@ -158,6 +202,16 @@ class BookingResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Статус бронирования')
+                    ->options([
+                        'pending' => 'Ожидает подтверждения',
+                        'confirmed' => 'Подтверждено',
+                        'cancelled' => 'Отменено',
+                        'refund_requested' => 'Запрошен возврат',
+                        'refunded' => 'Возвращено',
+                    ]),
+
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('Статус оплаты')
                     ->options([
@@ -172,9 +226,41 @@ class BookingResource extends Resource
                     ->options(PaymentGatewayEnum::options()),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('confirm')
+                        ->label('Подтвердить')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function (Booking $record) {
+                            app(\App\Services\BookingService::class)->confirm($record->id);
+                        })
+                        ->visible(fn (Booking $record) => $record->status === 'pending'),
+
+                    Tables\Actions\Action::make('cancel')
+                        ->label('Отменить')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->form([
+                            Forms\Components\Textarea::make('cancellation_reason')
+                                ->label('Причина отмены')
+                                ->required(),
+                        ])
+                        ->action(function (Booking $record, array $data) {
+                            app(\App\Services\BookingService::class)->cancel($record->id, $data['cancellation_reason']);
+                        })
+                        ->visible(fn (Booking $record) => $record->status !== 'cancelled' && $record->status !== 'refunded'),
+
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ])
+                    ->label('Действия')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->size('sm')
+                    ->color('gray')
+                    ->button(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

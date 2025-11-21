@@ -65,15 +65,15 @@ desc('Migrate storage files to shared directory (one-time)');
 task('storage:migrate', function () {
     $oldStorage = '{{deploy_path}}/storage';
     $newStorage = '{{deploy_path}}/shared/storage';
-
+    
     // Проверяем существует ли старая директория
     if (test("[ -d {$oldStorage} ]")) {
         // Создаём shared/storage если не существует
         run("mkdir -p {$newStorage}");
-
+        
         // Перемещаем файлы из старой storage в shared/storage
         run("rsync -av {$oldStorage}/ {$newStorage}/ || true");
-
+        
         info('✓ Storage files migrated to shared directory');
         warning('⚠ Old storage directory still exists at: '.$oldStorage);
         warning('⚠ You can remove it manually after verifying files are accessible');
@@ -86,13 +86,13 @@ desc('Create storage symlink pointing to shared storage');
 task('storage:symlink', function () {
     $link = '{{release_path}}/public/storage';
     $target = '{{deploy_path}}/shared/storage/app/public';
-
+    
     // Удаляем старый симлинк если существует
     run("rm -f {$link}");
-
+    
     // Создаём новый симлинк на shared storage
     run("ln -sf {$target} {$link}");
-
+    
     info('✓ Storage symlink created');
 });
 
@@ -108,7 +108,7 @@ task('cache:clear-all', function () {
     run('cd {{release_path}} && {{bin/php}} artisan config:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan route:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan view:clear || true');
-
+    
     info('✓ Cache cleared successfully (no DB required)');
 });
 
@@ -121,21 +121,21 @@ desc('Update Nginx configuration');
 task('nginx:config', function () {
     // Копируем конфиг на сервер
     upload('nginx.conf', '/tmp/nginx-api.conf');
-
+    
     // Проверяем синтаксис перед применением
     run('sudo nginx -t -c /tmp/nginx-api.conf 2>&1 || (echo "Nginx config test failed" && exit 0)');
-
+    
     // Бэкапим старый конфиг (оба варианта на случай если используется .conf)
     run('sudo cp /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-available/api.events-system.online.bak 2>/dev/null || true');
     run('sudo cp /etc/nginx/sites-available/api.events-system.online.conf /etc/nginx/sites-available/api.events-system.online.conf.bak 2>/dev/null || true');
-
+    
     // Применяем новый конфиг в оба места
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online');
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online.conf');
-
+    
     // Проверяем общую конфигурацию Nginx
     run('sudo nginx -t');
-
+    
     info('✓ Nginx configuration updated');
 });
 
@@ -143,6 +143,47 @@ desc('Restart Nginx');
 task('nginx:restart', function () {
     run('sudo systemctl restart nginx');
 })->once();
+
+desc('Setup Supervisor configuration');
+task('supervisor:config', function () {
+    $deployPath = get('deploy_path');
+    
+    $supervisorConfig = '[program:event-systems-reverb]
+process_name=%(program_name)s_%(process_num)02d
+command=/usr/bin/php '.$deployPath.'/current/artisan reverb:start --host=0.0.0.0 --port=6002 --no-interaction
+autostart=true
+autorestart=true
+user=root
+numprocs=1
+stopwaitsecs=3600
+environment=REVERB_SCALING_ENABLED="true",REDIS_HOST="127.0.0.1",REDIS_PORT="6379",REDIS_DB="0"
+
+[program:event-systems-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=/usr/bin/php '.$deployPath.'/current/artisan queue:work redis --queue=mails,refund,default --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+user=root
+numprocs=1
+stopwaitsecs=3600';
+
+    // Записываем конфигурацию во временный файл
+    $tempFile = '/tmp/supervisor-api.conf';
+    run('echo '.escapeshellarg($supervisorConfig).' > '.$tempFile);
+    
+    // Копируем конфигурацию в директорию supervisor
+    run('sudo cp '.$tempFile.' /etc/supervisor/conf.d/api.event-systems.online.conf');
+    
+    // Перечитываем конфигурацию supervisor
+    run('sudo supervisorctl reread');
+    run('sudo supervisorctl update');
+    
+    // Перезапускаем процессы
+    run('sudo supervisorctl restart event-systems-reverb:event-systems-reverb_00 || sudo supervisorctl start event-systems-reverb:event-systems-reverb_00');
+    run('sudo supervisorctl restart event-systems-queue:event-systems-queue_00 || sudo supervisorctl start event-systems-queue:event-systems-queue_00');
+    
+    info('✓ Supervisor configuration updated and processes restarted');
+});
 
 desc('Setup production .env file');
 task('env:setup', function () {
@@ -178,11 +219,11 @@ SESSION_ENCRYPT=false
 SESSION_PATH=/
 SESSION_DOMAIN=null
 
-BROADCAST_CONNECTION=log
+BROADCAST_CONNECTION=reverb
 FILESYSTEM_DISK=local
-QUEUE_CONNECTION=database
+QUEUE_CONNECTION=redis
 
-CACHE_STORE=file
+CACHE_STORE=redis
 
 MEMCACHED_HOST=127.0.0.1
 
@@ -190,6 +231,8 @@ REDIS_CLIENT=phpredis
 REDIS_HOST=127.0.0.1
 REDIS_PASSWORD=null
 REDIS_PORT=6379
+REDIS_DB=0
+REDIS_CACHE_DB=1
 
 MAIL_MAILER=log
 MAIL_SCHEME=null
@@ -235,14 +278,34 @@ YANDEX_MAPS_API_KEY=593670a6-8e5e-4895-9fe5-dbd37dde463a
 # OpenStreetMap (для остальных стран) - не требует API ключа
 # OSM_TILE_SERVER=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 
-VITE_APP_NAME="${APP_NAME}"';
+# Laravel Reverb (WebSocket через Redis)
+REVERB_APP_ID=00895f0ebe77df83c741
+REVERB_APP_KEY=96e535e407b504b429fe4849799d2e796cc6d501
+REVERB_APP_SECRET=77597d8f1b668ad8db6c71e4f7ba26dac9d52972b79bbb8b5ffcb4028ba42549048ee9807f8722b4
+REVERB_HOST=api.events-system.online
+REVERB_PORT=6002
+REVERB_SCHEME=https
+REVERB_SERVER_HOST=0.0.0.0
+REVERB_SERVER_PORT=6002
+REVERB_SCALING_ENABLED=true
+REVERB_SCALING_CHANNEL=reverb
+REVERB_DEBUG=false
+
+VITE_APP_NAME="${APP_NAME}"
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+VITE_WS_URL=api.events-system.online
+VITE_WS_PORT=6002
+VITE_WSS_PORT=6002';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
-
+    
     // Записываем .env файл через echo
     run('echo '.escapeshellarg($envContent).' > {{deploy_path}}/shared/.env');
-
+    
     info('✅ Production .env file created successfully!');
     info('📍 Location: {{deploy_path}}/shared/.env');
 });
@@ -264,6 +327,7 @@ task('deploy', [
     // 'artisan:optimize', // Отключено, так как тоже пытается кешировать маршруты
     'artisan:event:cache',
     'filament:optimize',
+    'supervisor:config',
     'deploy:publish',
     'php-fpm:restart',
     'nginx:restart',

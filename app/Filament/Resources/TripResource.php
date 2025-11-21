@@ -22,6 +22,22 @@ class TripResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Поездки';
 
+    // Используем ID для маршрутов в админке, несмотря на то что модель использует slug
+    protected static ?string $recordRouteKeyName = 'id';
+
+    /**
+     * Переопределяем getUrl чтобы всегда использовать id для record параметра
+     */
+    public static function getUrl(string $name = 'index', array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?\Illuminate\Database\Eloquent\Model $tenant = null): string
+    {
+        // Если передан record как модель, используем id вместо route key
+        if (isset($parameters['record']) && $parameters['record'] instanceof \Illuminate\Database\Eloquent\Model) {
+            $parameters['record'] = $parameters['record']->getKey();
+        }
+
+        return parent::getUrl($name, $parameters, $isAbsolute, $panel, $tenant);
+    }
+
     public static function form(Form $form): Form
     {
         return $form
