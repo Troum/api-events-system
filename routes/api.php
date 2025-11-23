@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MapConfigController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\TripController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,10 @@ Route::prefix('v1')->group(function () {
     Route::get('maps/config', [MapConfigController::class, 'index']);
     Route::get('maps/provider', [MapConfigController::class, 'checkProvider']);
     Route::get('maps/geo-info', [MapConfigController::class, 'geoInfo']);
+
+    // Settings
+    Route::get('settings', [SettingsController::class, 'index']);
+    Route::get('settings/contacts', [SettingsController::class, 'contacts']);
 
     // Auth & Account
     Route::post('auth/magic-link', [AuthController::class, 'sendMagicLink']);

@@ -38,6 +38,18 @@ host('production')
     ->set('writable_use_sudo', false);
 
 // Tasks
+desc('Install Composer dependencies');
+task('composer:install', function () {
+    run('cd {{release_path}} && {{bin/composer}} install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts');
+    info('✓ Composer dependencies installed');
+});
+
+desc('Run Composer scripts');
+task('composer:scripts', function () {
+    run('cd {{release_path}} && {{bin/composer}} run-script post-install-cmd --no-interaction || true');
+    info('✓ Composer scripts executed');
+});
+
 desc('Build frontend assets');
 task('build:assets', function () {
     if (test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
@@ -314,7 +326,9 @@ VITE_WSS_PORT=6002';
 desc('Deploy the application');
 task('deploy', [
     'deploy:prepare',
-    'deploy:vendors',
+    'env:setup',  // Обновляем .env файл при каждом деплое
+    'composer:install',
+    'composer:scripts',
     'build:assets',
     'filament:assets',
     'livewire:assets',
