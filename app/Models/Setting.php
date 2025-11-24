@@ -15,6 +15,14 @@ class Setting extends Model
     ];
 
     /**
+     * Получить route key для модели
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'id';
+    }
+
+    /**
      * Получить значение настройки по ключу
      */
     public static function get(string $key, ?string $default = null): ?string

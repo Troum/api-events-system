@@ -13,7 +13,10 @@ class ListSettings extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\Action::make('edit')
+                ->label('Редактировать настройки')
+                ->icon('heroicon-o-pencil')
+                ->url(static::getResource()::getUrl('edit', ['record' => 1])),
         ];
     }
 }
