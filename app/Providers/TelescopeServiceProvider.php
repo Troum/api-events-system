@@ -18,7 +18,11 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         $this->hideSensitiveRequestDetails();
 
         Telescope::filter(function (): bool {
-            return ! app()->environment('production');
+            if (app()->environment('production')) {
+                return (bool) config('telescope.enabled');
+            }
+
+            return true;
         });
     }
 
@@ -40,7 +44,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewTelescope', function (User $user): bool {
-            $allowedEmails = collect(explode(',', (string) env('TELESCOPE_ALLOWED_EMAILS', '')))
+            $allowedEmails = collect(explode(',', (string) config('telescope.allowed_emails', '')))
                 ->map(fn (string $email): string => Str::lower(trim($email)))
                 ->filter()
                 ->values();
@@ -69,5 +73,3 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         ]);
     }
 }
-
-

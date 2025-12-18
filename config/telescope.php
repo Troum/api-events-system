@@ -5,6 +5,8 @@ return [
 
     'path' => env('TELESCOPE_PATH', 'telescope'),
 
+    'allowed_emails' => env('TELESCOPE_ALLOWED_EMAILS', ''),
+
     'driver' => env('TELESCOPE_DRIVER', 'database'),
 
     'storage' => [
@@ -18,5 +20,3 @@ return [
         'web',
     ],
 ];
-
-
