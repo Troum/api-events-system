@@ -310,7 +310,11 @@ VITE_REVERB_PORT="${REVERB_PORT}"
 VITE_REVERB_SCHEME="${REVERB_SCHEME}"
 VITE_WS_URL=api.events-system.online
 VITE_WS_PORT=6002
-VITE_WSS_PORT=6002';
+VITE_WSS_PORT=6002
+
+TELESCOPE_ENABLED=false
+TELESCOPE_PATH=telescope
+TELESCOPE_ALLOWED_EMAILS=';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
