@@ -124,6 +124,29 @@ task('cache:clear-all', function () {
     info('✓ Cache cleared successfully (no DB required)');
 });
 
+desc('Run database migrations (ignore Telescope "already exists" errors)');
+task('artisan:migrate:safe', function () {
+    try {
+        run('cd {{release_path}} && {{bin/php}} artisan migrate --force --no-interaction');
+        info('✓ Migrations executed');
+    } catch (\Throwable $e) {
+        $output = method_exists($e, 'getOutput') ? (string) $e->getOutput() : '';
+        $errorOutput = method_exists($e, 'getErrorOutput') ? (string) $e->getErrorOutput() : '';
+        $text = $e->getMessage()."\n".$output."\n".$errorOutput;
+
+        $isTelescopeAlreadyExists =
+            (str_contains($text, 'telescope_entries') || str_contains($text, 'telescope_entries_tags'))
+            && (str_contains($text, 'already exists') || str_contains($text, 'Base table or view already exists'));
+
+        if ($isTelescopeAlreadyExists) {
+            warning('⚠ Telescope tables already exist. Skipping Telescope migration error and continuing deploy.');
+            return;
+        }
+
+        throw $e;
+    }
+});
+
 desc('Restart PHP-FPM');
 task('php-fpm:restart', function () {
     run('sudo systemctl restart php8.4-fpm');
@@ -338,7 +361,7 @@ task('deploy', [
     'livewire:assets',
     'storage:symlink',
     'cache:clear-all',  // Очищаем кеш ПЕРЕД миграциями
-    'artisan:migrate',
+    'artisan:migrate:safe',
     'artisan:view:cache',
     'artisan:config:cache',
     // 'artisan:route:cache', // Отключено из-за конфликта с Livewire/Filament
