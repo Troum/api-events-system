@@ -13,7 +13,7 @@ set('writable_chmod_mode', '0775');
 
 // Hosts
 host('production')
-    ->set('hostname', '185.20.227.190')
+    ->set('hostname', '91.229.11.22')
     ->set('remote_user', 'root')
     ->set('deploy_path', '/var/www/api.events-system.online')
     ->set('branch', 'main')
@@ -54,7 +54,7 @@ desc('Build frontend assets');
 task('build:assets', function () {
     if (test('[ -s "$HOME/.nvm/nvm.sh" ]')) {
         info('Building assets with Node.js 20 via nvm...');
-        run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm run build --omit=dev');
+        run('cd {{release_path}} && export NVM_DIR="$HOME/.nvm" && source "$NVM_DIR/nvm.sh" && nvm use 20 && npm ci --no-audit --no-fund && npm run build && npm prune --omit=dev --no-audit --no-fund');
         info('✓ Assets built successfully');
     } else {
         warning('⚠ nvm not found. Skipping asset build.');
@@ -77,15 +77,15 @@ desc('Migrate storage files to shared directory (one-time)');
 task('storage:migrate', function () {
     $oldStorage = '{{deploy_path}}/storage';
     $newStorage = '{{deploy_path}}/shared/storage';
-    
+
     // Проверяем существует ли старая директория
     if (test("[ -d {$oldStorage} ]")) {
         // Создаём shared/storage если не существует
         run("mkdir -p {$newStorage}");
-        
+
         // Перемещаем файлы из старой storage в shared/storage
         run("rsync -av {$oldStorage}/ {$newStorage}/ || true");
-        
+
         info('✓ Storage files migrated to shared directory');
         warning('⚠ Old storage directory still exists at: '.$oldStorage);
         warning('⚠ You can remove it manually after verifying files are accessible');
@@ -98,13 +98,13 @@ desc('Create storage symlink pointing to shared storage');
 task('storage:symlink', function () {
     $link = '{{release_path}}/public/storage';
     $target = '{{deploy_path}}/shared/storage/app/public';
-    
+
     // Удаляем старый симлинк если существует
     run("rm -f {$link}");
-    
+
     // Создаём новый симлинк на shared storage
     run("ln -sf {$target} {$link}");
-    
+
     info('✓ Storage symlink created');
 });
 
@@ -120,7 +120,7 @@ task('cache:clear-all', function () {
     run('cd {{release_path}} && {{bin/php}} artisan config:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan route:clear || true');
     run('cd {{release_path}} && {{bin/php}} artisan view:clear || true');
-    
+
     info('✓ Cache cleared successfully (no DB required)');
 });
 
@@ -133,21 +133,21 @@ desc('Update Nginx configuration');
 task('nginx:config', function () {
     // Копируем конфиг на сервер
     upload('nginx.conf', '/tmp/nginx-api.conf');
-    
+
     // Проверяем синтаксис перед применением
     run('sudo nginx -t -c /tmp/nginx-api.conf 2>&1 || (echo "Nginx config test failed" && exit 0)');
-    
+
     // Бэкапим старый конфиг (оба варианта на случай если используется .conf)
     run('sudo cp /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-available/api.events-system.online.bak 2>/dev/null || true');
     run('sudo cp /etc/nginx/sites-available/api.events-system.online.conf /etc/nginx/sites-available/api.events-system.online.conf.bak 2>/dev/null || true');
-    
+
     // Применяем новый конфиг в оба места
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online');
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online.conf');
-    
+
     // Проверяем общую конфигурацию Nginx
     run('sudo nginx -t');
-    
+
     info('✓ Nginx configuration updated');
 });
 
@@ -159,7 +159,7 @@ task('nginx:restart', function () {
 desc('Setup Supervisor configuration');
 task('supervisor:config', function () {
     $deployPath = get('deploy_path');
-    
+
     $supervisorConfig = '[program:event-systems-reverb]
 process_name=%(program_name)s_%(process_num)02d
 command=/usr/bin/php '.$deployPath.'/current/artisan reverb:start --host=0.0.0.0 --port=6002 --no-interaction
@@ -182,18 +182,18 @@ stopwaitsecs=3600';
     // Записываем конфигурацию во временный файл
     $tempFile = '/tmp/supervisor-api.conf';
     run('echo '.escapeshellarg($supervisorConfig).' > '.$tempFile);
-    
+
     // Копируем конфигурацию в директорию supervisor
     run('sudo cp '.$tempFile.' /etc/supervisor/conf.d/api.event-systems.online.conf');
-    
+
     // Перечитываем конфигурацию supervisor
     run('sudo supervisorctl reread');
     run('sudo supervisorctl update');
-    
+
     // Перезапускаем процессы
     run('sudo supervisorctl restart event-systems-reverb:event-systems-reverb_00 || sudo supervisorctl start event-systems-reverb:event-systems-reverb_00');
     run('sudo supervisorctl restart event-systems-queue:event-systems-queue_00 || sudo supervisorctl start event-systems-queue:event-systems-queue_00');
-    
+
     info('✓ Supervisor configuration updated and processes restarted');
 });
 
@@ -222,7 +222,7 @@ DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=events_system
-DB_USERNAME=events_manager
+DB_USERNAME=events_system
 DB_PASSWORD="!@#1029QPwo#@!"
 
 SESSION_DRIVER=database
@@ -314,10 +314,10 @@ VITE_WSS_PORT=6002';
 
     // Создаём директорию shared если её нет
     run('mkdir -p {{deploy_path}}/shared');
-    
+
     // Записываем .env файл через echo
     run('echo '.escapeshellarg($envContent).' > {{deploy_path}}/shared/.env');
-    
+
     info('✅ Production .env file created successfully!');
     info('📍 Location: {{deploy_path}}/shared/.env');
 });
