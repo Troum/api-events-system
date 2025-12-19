@@ -140,6 +140,7 @@ task('artisan:migrate:safe', function () {
 
         if ($isTelescopeAlreadyExists) {
             warning('⚠ Telescope tables already exist. Skipping Telescope migration error and continuing deploy.');
+
             return;
         }
 
@@ -152,23 +153,34 @@ task('php-fpm:restart', function () {
     run('sudo systemctl restart php8.4-fpm');
 })->once();
 
+desc('Fix permissions after deploy');
+task('deploy:permissions', function () {
+    // Устанавливаем правильные права на shared storage
+    run('chmod -R 775 {{deploy_path}}/shared/storage');
+    run('chown -R www-data:www-data {{deploy_path}}/shared/storage');
+
+    // Права на bootstrap/cache в текущем релизе
+    run('chmod -R 775 {{release_path}}/bootstrap/cache');
+    run('chown -R www-data:www-data {{release_path}}/bootstrap/cache');
+
+    info('✓ Permissions fixed');
+});
+
 desc('Update Nginx configuration');
 task('nginx:config', function () {
     // Копируем конфиг на сервер
     upload('nginx.conf', '/tmp/nginx-api.conf');
 
-    // Проверяем синтаксис перед применением
-    run('sudo nginx -t -c /tmp/nginx-api.conf 2>&1 || (echo "Nginx config test failed" && exit 0)');
-
-    // Бэкапим старый конфиг (оба варианта на случай если используется .conf)
+    // Бэкапим старый конфиг
     run('sudo cp /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-available/api.events-system.online.bak 2>/dev/null || true');
-    run('sudo cp /etc/nginx/sites-available/api.events-system.online.conf /etc/nginx/sites-available/api.events-system.online.conf.bak 2>/dev/null || true');
 
-    // Применяем новый конфиг в оба места
+    // Применяем новый конфиг
     run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online');
-    run('sudo cp /tmp/nginx-api.conf /etc/nginx/sites-available/api.events-system.online.conf');
 
-    // Проверяем общую конфигурацию Nginx
+    // Создаём симлинк в sites-enabled если его нет
+    run('sudo ln -sf /etc/nginx/sites-available/api.events-system.online /etc/nginx/sites-enabled/api.events-system.online');
+
+    // Проверяем конфигурацию Nginx
     run('sudo nginx -t');
 
     info('✓ Nginx configuration updated');
@@ -370,6 +382,8 @@ task('deploy', [
     'filament:optimize',
     'supervisor:config',
     'deploy:publish',
+    'deploy:permissions',  // Исправляем права доступа
+    'nginx:config',  // Обновляем nginx конфиг
     'php-fpm:restart',
     'nginx:restart',
 ]);
